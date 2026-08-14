@@ -14,7 +14,7 @@ interface CalendarEvent {
   lectureNumber: number;
   room?: string;
   attendanceId: string | null;
-  status: string; // PENDING, PRESENT, ABSENT
+  status: string;
 }
 
 const CalendarPage: React.FC = () => {
@@ -26,12 +26,12 @@ const CalendarPage: React.FC = () => {
     try {
       const start = fetchInfo.startStr.split('T')[0];
       const end = fetchInfo.endStr.split('T')[0];
-      const data = await fetchWithAuth(`/attendance/range?start=${start}&end=${end}`);
+      const data = await fetchWithAuth(`/api/attendance/range?start=${start}&end=${end}`);
       
       const calendarEvents = data.map((item: CalendarEvent) => {
         let color = item.subject.color || '#9baba5';
-        if (item.status === 'PRESENT') color = '#22c55e'; // green-500
-        if (item.status === 'ABSENT') color = '#ef4444'; // red-500
+        if (item.status === 'PRESENT') color = '#22c55e';
+        if (item.status === 'ABSENT') color = '#ef4444';
 
         return {
           id: `${item.timetableSlotId}-${item.date}`,
@@ -56,7 +56,7 @@ const CalendarPage: React.FC = () => {
   const handleMarkAttendance = async (status: 'PRESENT' | 'ABSENT' | 'PENDING') => {
     if (!selectedClass) return;
     try {
-      await fetchWithAuth('/attendance', {
+      await fetchWithAuth('/api/attendance', {
         method: 'POST',
         body: JSON.stringify({
           timetableSlotId: selectedClass.timetableSlotId,
@@ -66,7 +66,6 @@ const CalendarPage: React.FC = () => {
         })
       });
       setSelectedClass(null);
-      // Refresh calendar
       calendarRef.current?.getApi().refetchEvents();
     } catch (err) {
       console.error(err);
@@ -103,7 +102,6 @@ const CalendarPage: React.FC = () => {
         />
       </div>
 
-      {/* Modal for marking attendance */}
       {selectedClass && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-surface w-full max-w-md rounded-2xl shadow-xl overflow-hidden">

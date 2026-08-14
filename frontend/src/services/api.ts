@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://attendly-backend-gd2n.onrender.com';
 
 export const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
   const { data: { session } } = await supabase.auth.getSession();

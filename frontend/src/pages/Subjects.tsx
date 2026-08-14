@@ -24,15 +24,18 @@ const Subjects: React.FC = () => {
     teacher: '',
     room: '',
     requiredAttendance: '',
-    color: '#9baba5' // Default primary color
+    color: '#9baba5',
   });
 
+  // =========================
+  // LOAD SUBJECTS
+  // =========================
   const loadSubjects = async () => {
     try {
-      const data = await fetchWithAuth('/subjects');
+      const data = await fetchWithAuth('/api/subjects');
       setSubjects(data);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load subjects:', err);
     } finally {
       setLoading(false);
     }
@@ -42,71 +45,138 @@ const Subjects: React.FC = () => {
     loadSubjects();
   }, []);
 
+  // =========================
+  // OPEN MODAL
+  // =========================
   const handleOpenModal = (subject?: Subject) => {
     if (subject) {
       setEditingSubject(subject);
+
       setFormData({
         name: subject.name,
         code: subject.code,
         teacher: subject.teacher || '',
         room: subject.room || '',
-        requiredAttendance: subject.requiredAttendance ? subject.requiredAttendance.toString() : '',
-        color: subject.color || '#9baba5'
+        requiredAttendance:
+          subject.requiredAttendance !== undefined &&
+          subject.requiredAttendance !== null
+            ? subject.requiredAttendance.toString()
+            : '',
+        color: subject.color || '#9baba5',
       });
     } else {
       setEditingSubject(null);
-      setFormData({ name: '', code: '', teacher: '', room: '', requiredAttendance: '', color: '#9baba5' });
+
+      setFormData({
+        name: '',
+        code: '',
+        teacher: '',
+        room: '',
+        requiredAttendance: '',
+        color: '#9baba5',
+      });
     }
+
     setIsModalOpen(true);
   };
 
+  // =========================
+  // SUBMIT FORM
+  // =========================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const payload = {
-      ...formData,
-      requiredAttendance: formData.requiredAttendance ? parseFloat(formData.requiredAttendance) : null
+      name: formData.name,
+      code: formData.code,
+      teacher: formData.teacher || null,
+      room: formData.room || null,
+      requiredAttendance: formData.requiredAttendance
+        ? parseFloat(formData.requiredAttendance)
+        : null,
+      color: formData.color,
     };
 
     try {
       if (editingSubject) {
-        await fetchWithAuth(`/subjects/${editingSubject.id}`, {
+        // UPDATE
+        await fetchWithAuth(`/api/subjects/${editingSubject.id}`, {
           method: 'PATCH',
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
       } else {
-        await fetchWithAuth('/subjects', {
+        // CREATE
+        await fetchWithAuth('/api/subjects', {
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
       }
+
       setIsModalOpen(false);
-      loadSubjects();
+      setEditingSubject(null);
+
+      await loadSubjects();
     } catch (err) {
-      console.error(err);
-      alert('Failed to save subject');
+      console.error('Failed to save subject:', err);
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : 'Failed to save subject'
+      );
     }
   };
 
+  // =========================
+  // DELETE SUBJECT
+  // =========================
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this subject?')) return;
+    if (!confirm('Are you sure you want to delete this subject?')) {
+      return;
+    }
+
     try {
-      await fetchWithAuth(`/subjects/${id}`, { method: 'DELETE' });
-      loadSubjects();
+      await fetchWithAuth(`/api/subjects/${id}`, {
+        method: 'DELETE',
+      });
+
+      await loadSubjects();
     } catch (err) {
-      console.error(err);
-      alert('Failed to delete subject');
+      console.error('Failed to delete subject:', err);
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete subject'
+      );
     }
   };
 
-  if (loading) return <div className="p-8">Loading subjects...</div>;
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) {
+    return <div className="p-8">Loading subjects...</div>;
+  }
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="p-8 max-w-6xl mx-auto">
+
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Subjects</h1>
-          <p className="text-gray-500 mt-1">Manage your courses and attendance requirements.</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Subjects
+          </h1>
+
+          <p className="text-gray-500 mt-1">
+            Manage your courses and attendance requirements.
+          </p>
         </div>
+
         <button
           onClick={() => handleOpenModal()}
           className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
@@ -116,144 +186,295 @@ const Subjects: React.FC = () => {
         </button>
       </div>
 
+      {/* SUBJECT GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         {subjects.map((subject) => (
-          <div key={subject.id} className="bg-surface p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+          <div
+            key={subject.id}
+            className="bg-surface p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col"
+          >
+
+            {/* TOP SECTION */}
             <div className="flex justify-between items-start mb-4">
+
               <div className="flex items-center gap-3">
-                <div 
+
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                  style={{ backgroundColor: subject.color || '#9baba5' }}
+                  style={{
+                    backgroundColor:
+                      subject.color || '#9baba5',
+                  }}
                 >
-                  {subject.code.substring(0, 2).toUpperCase()}
+                  {subject.code
+                    .substring(0, 2)
+                    .toUpperCase()}
                 </div>
+
                 <div>
-                  <h3 className="font-bold text-gray-900">{subject.name}</h3>
-                  <p className="text-sm text-gray-500">{subject.code}</p>
+                  <h3 className="font-bold text-gray-900">
+                    {subject.name}
+                  </h3>
+
+                  <p className="text-sm text-gray-500">
+                    {subject.code}
+                  </p>
                 </div>
+
               </div>
+
+              {/* ACTION BUTTONS */}
               <div className="flex gap-2">
-                <button onClick={() => handleOpenModal(subject)} className="text-gray-400 hover:text-primary transition-colors">
+
+                <button
+                  onClick={() => handleOpenModal(subject)}
+                  className="text-gray-400 hover:text-primary transition-colors"
+                  title="Edit subject"
+                >
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => handleDelete(subject.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+
+                <button
+                  onClick={() => handleDelete(subject.id)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  title="Delete subject"
+                >
                   <Trash2 size={16} />
                 </button>
+
               </div>
             </div>
-            
+
+            {/* DETAILS */}
             <div className="mt-auto pt-4 border-t border-gray-50 space-y-2">
+
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Teacher:</span>
-                <span className="font-medium text-gray-900">{subject.teacher || '—'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Room:</span>
-                <span className="font-medium text-gray-900">{subject.room || '—'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Req. Attendance:</span>
+                <span className="text-gray-500">
+                  Teacher:
+                </span>
+
                 <span className="font-medium text-gray-900">
-                  {subject.requiredAttendance ? `${subject.requiredAttendance}%` : 'Default'}
+                  {subject.teacher || '—'}
                 </span>
               </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">
+                  Room:
+                </span>
+
+                <span className="font-medium text-gray-900">
+                  {subject.room || '—'}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">
+                  Req. Attendance:
+                </span>
+
+                <span className="font-medium text-gray-900">
+                  {subject.requiredAttendance !== undefined &&
+                  subject.requiredAttendance !== null
+                    ? `${subject.requiredAttendance}%`
+                    : 'Default'}
+                </span>
+              </div>
+
             </div>
           </div>
         ))}
 
+        {/* NO SUBJECTS */}
         {subjects.length === 0 && (
           <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-            <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No subjects yet</h3>
-            <p className="mt-1 text-gray-500">Get started by adding your first course.</p>
+
+            <BookOpen
+              className="mx-auto h-12 w-12 text-gray-400 mb-4"
+            />
+
+            <h3 className="text-lg font-medium text-gray-900">
+              No subjects yet
+            </h3>
+
+            <p className="mt-1 text-gray-500">
+              Get started by adding your first course.
+            </p>
+
           </div>
         )}
+
       </div>
 
-      {/* Modal */}
+      {/* =========================
+          MODAL
+          ========================= */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+
           <div className="bg-surface w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+
+            {/* MODAL HEADER */}
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold">{editingSubject ? 'Edit Subject' : 'Add Subject'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+
+              <h2 className="text-xl font-bold">
+                {editingSubject
+                  ? 'Edit Subject'
+                  : 'Add Subject'}
+              </h2>
+
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X size={20} />
               </button>
+
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+            {/* FORM */}
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-4"
+            >
+
+              {/* SUBJECT NAME */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject Name *
+                </label>
+
                 <input
                   type="text"
                   required
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      name: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                   placeholder="e.g. Data Structures"
                 />
               </div>
-              
+
+              {/* COURSE CODE */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Course Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Code *
+                </label>
+
                 <input
                   type="text"
                   required
                   value={formData.code}
-                  onChange={e => setFormData({...formData, code: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      code: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                   placeholder="e.g. CS201"
                 />
               </div>
-              
+
+              {/* TEACHER + ROOM */}
               <div className="grid grid-cols-2 gap-4">
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teacher
+                  </label>
+
                   <input
                     type="text"
                     value={formData.teacher}
-                    onChange={e => setFormData({...formData, teacher: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        teacher: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                     placeholder="e.g. Dr. Smith"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Room
+                  </label>
+
                   <input
                     type="text"
                     value={formData.room}
-                    onChange={e => setFormData({...formData, room: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        room: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                     placeholder="e.g. A-101"
                   />
                 </div>
+
               </div>
-              
+
+              {/* ATTENDANCE + COLOR */}
               <div className="grid grid-cols-2 gap-4">
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Required Att. (%)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Required Att. (%)
+                  </label>
+
                   <input
                     type="number"
-                    min="0" max="100"
+                    min="0"
+                    max="100"
                     value={formData.requiredAttendance}
-                    onChange={e => setFormData({...formData, requiredAttendance: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        requiredAttendance: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
                     placeholder="e.g. 75"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Leave blank to use default</p>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    Leave blank to use default
+                  </p>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Color
+                  </label>
+
                   <input
                     type="color"
                     value={formData.color}
-                    onChange={e => setFormData({...formData, color: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        color: e.target.value,
+                      })
+                    }
                     className="w-full h-10 px-1 py-1 border border-gray-200 rounded-lg cursor-pointer"
                   />
                 </div>
+
               </div>
 
+              {/* BUTTONS */}
               <div className="pt-4 flex justify-end gap-3">
+
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -261,17 +482,23 @@ const Subjects: React.FC = () => {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                 >
-                  Save Subject
+                  {editingSubject
+                    ? 'Update Subject'
+                    : 'Save Subject'}
                 </button>
+
               </div>
+
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };

@@ -40,8 +40,8 @@ const Dashboard: React.FC = () => {
     try {
       const todayStr = new Date().toISOString().split('T')[0];
       const [summaryData, classesData] = await Promise.all([
-        fetchWithAuth('/attendance/summary'),
-        fetchWithAuth(`/attendance?date=${todayStr}`)
+        fetchWithAuth('/api/attendance/summary'),
+        fetchWithAuth(`/api/attendance?date=${todayStr}`)
       ]);
       setSummary(summaryData);
       setTodayClasses(classesData);
@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
   const handleMarkAttendance = async (slot: TodayClass, status: 'PRESENT' | 'ABSENT') => {
     const todayStr = new Date().toISOString().split('T')[0];
     try {
-      await fetchWithAuth('/attendance', {
+      await fetchWithAuth('/api/attendance', {
         method: 'POST',
         body: JSON.stringify({
           timetableSlotId: slot.timetableSlotId,

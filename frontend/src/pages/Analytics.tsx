@@ -6,12 +6,12 @@ const Analytics: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchWithAuth('/attendance/summary')
-      .then(setSummary)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+useEffect(() => {
+  fetchWithAuth('/api/attendance/summary')
+    .then(setSummary)
+    .catch(console.error)
+    .finally(() => setLoading(false));
+}, []);
 
   if (loading) return <div className="p-8">Loading analytics...</div>;
   if (!summary) return <div className="p-8">Failed to load analytics</div>;
