@@ -1,8 +1,15 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, BookOpen, Calendar, Clock, LogOut, Upload as UploadIcon, PieChart } from 'lucide-react';
-import { fetchWithAuth } from '../services/api';
+import {
+  Home,
+  BookOpen,
+  Calendar,
+  Clock,
+  LogOut,
+  Upload as UploadIcon,
+  PieChart
+} from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
   const { signOut } = useAuth();
@@ -17,24 +24,6 @@ const DashboardLayout: React.FC = () => {
     { name: 'Analytics', path: '/analytics', icon: PieChart },
   ];
 
-  const [ setUpcoming] = React.useState<any[]>([]);
- 
-
-  React.useEffect(() => {
-    fetchWithAuth('/reminders/upcoming')
-      .then(setUpcoming)
-      .catch(console.error);
-    
-    // Poll every 5 minutes
-    const interval = setInterval(() => {
-      fetchWithAuth('/reminders/upcoming')
-        .then(setUpcoming)
-        .catch(console.error);
-    }, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -44,22 +33,27 @@ const DashboardLayout: React.FC = () => {
             Attendly<span className="text-primary">.</span>
           </h1>
         </div>
-        
+
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
             const Icon = item.icon;
+
             return (
               <Link
                 key={item.name}
                 to={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary' 
+                  isActive
+                    ? 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
+                <Icon
+                  className={`w-5 h-5 ${
+                    isActive ? 'text-primary' : 'text-gray-400'
+                  }`}
+                />
                 {item.name}
               </Link>
             );
@@ -71,7 +65,7 @@ const DashboardLayout: React.FC = () => {
             onClick={signOut}
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            <LogOut className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+            <LogOut className="w-5 h-5 text-gray-400" />
             Sign Out
           </button>
         </div>
