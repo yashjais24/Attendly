@@ -58,7 +58,7 @@ const UploadPage: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetchWithAuth('/upload', {
+      const response = await fetchWithAuth('/api/upload', {
         method: 'POST',
         body: formData // fetchWithAuth won't set Content-Type if it's FormData, which is correct for multipart boundary
       });

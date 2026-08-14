@@ -66,7 +66,16 @@ const CalendarPage: React.FC = () => {
         })
       });
       setSelectedClass(null);
-      calendarRef.current?.getApi().refetchEvents();
+
+const calendarApi = calendarRef.current?.getApi();
+if (calendarApi) {
+  const currentView = calendarApi.view;
+
+  await fetchEvents({
+    startStr: currentView.activeStart.toISOString(),
+    endStr: currentView.activeEnd.toISOString()
+  });
+}
     } catch (err) {
       console.error(err);
       alert('Failed to update attendance');
