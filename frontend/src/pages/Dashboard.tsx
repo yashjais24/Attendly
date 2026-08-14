@@ -80,8 +80,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Good Morning!</h1>
-        <p className="text-gray-500 mt-1">Here is your attendance overview for today.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Yo, you’re back</h1>
+        <p className="text-gray-500 mt-1">Let’s see if you’re still safe. 💀</p>
       </div>
 
       {/* Top Stats */}
