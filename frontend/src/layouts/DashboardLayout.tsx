@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, BookOpen, Calendar, Clock, LogOut, Upload as UploadIcon, PieChart, Bell } from 'lucide-react';
+import { Home, BookOpen, Calendar, Clock, LogOut, Upload as UploadIcon, PieChart } from 'lucide-react';
 import { fetchWithAuth } from '../services/api';
 
 const DashboardLayout: React.FC = () => {
@@ -17,8 +17,8 @@ const DashboardLayout: React.FC = () => {
     { name: 'Analytics', path: '/analytics', icon: PieChart },
   ];
 
-  const [upcoming, setUpcoming] = React.useState<any[]>([]);
-  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [ setUpcoming] = React.useState<any[]>([]);
+ 
 
   React.useEffect(() => {
     fetchWithAuth('/reminders/upcoming')

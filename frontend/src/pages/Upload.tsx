@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { fetchWithAuth } from '../services/api';
-import { Upload as UploadIcon, FileText, Image as ImageIcon, Loader2, Check, X, Plus } from 'lucide-react';
+import { Upload as UploadIcon, FileText, Image as ImageIcon, Loader2, Check} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ParsedSlot {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchWithAuth } from '../services/api';
-import { Plus, Edit2, Trash2, X, SplitSquareHorizontal } from 'lucide-react';
+import { Plus, Trash2, X, SplitSquareHorizontal } from 'lucide-react';
 
 interface Subject {
   id: string;
