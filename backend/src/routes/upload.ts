@@ -13,7 +13,7 @@ router.use(requireAuth);
 const upload = multer({
   dest: os.tmpdir(),
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20 MB
+    fileSize: 20 * 1024 * 1024,
   },
 });
 
@@ -102,7 +102,6 @@ must become:
 10:00 - 10:50 DAA
 10:50 - 11:40 DAA
 
-
 These represent TWO separate attendance records.
 
 5. Preserve the actual timetable start and end times.
@@ -119,10 +118,37 @@ These represent TWO separate attendance records.
 5 = Friday
 6 = Saturday
 
-8. suggestedSubjectCode:
-   - Use the subject code if clearly visible.
-   - Otherwise use a short recognizable subject abbreviation.
-   - Do NOT invent a random code.
+8. SUBJECT EXTRACTION:
+
+For every lecture, carefully inspect the timetable cell and extract:
+
+- suggestedSubjectName
+- suggestedSubjectCode
+
+The subject name should be the ACTUAL SUBJECT NAME visible in the timetable.
+
+Examples:
+
+"Data Structures and Algorithms"
+"Operating Systems"
+"Database Management System"
+"Computer Networks"
+
+Do NOT use the teacher name, room number, section name,
+or any other text as the subject name.
+
+If a subject code is clearly visible, use that exact code.
+
+If no subject code is visible, use a short recognizable abbreviation
+based only on the visible subject name.
+
+Do NOT invent a random course code.
+
+If the subject name is clearly visible but the code is not,
+still provide the subject name.
+
+If the text is unclear, make your best extraction based only
+on what is actually visible.
 
 9. lectureNumber:
    - Number individual lectures separately.
@@ -131,17 +157,25 @@ These represent TWO separate attendance records.
      second block = 2
 
 10. Ignore:
-   - breaks
-   - lunch
-   - free periods
-   - holidays
-   - announcements
-   - room-only information
-   - teacher-only information
+
+- breaks
+- lunch
+- free periods
+- holidays
+- announcements
+- room-only information
+- teacher-only information
 
 11. Do not invent classes.
 
-12. If something is unclear, make your best extraction based only on visible information.
+12. EVERY lecture object must contain:
+
+- dayOfWeek
+- startTime
+- endTime
+- suggestedSubjectName
+- suggestedSubjectCode
+- lectureNumber
 
 13. Return ONLY valid JSON.
 
@@ -158,6 +192,7 @@ Return exactly this structure:
     "dayOfWeek": 1,
     "startTime": "09:00",
     "endTime": "10:00",
+    "suggestedSubjectName": "Data Structures and Algorithms",
     "suggestedSubjectCode": "DSA",
     "lectureNumber": 1
   }
@@ -179,14 +214,12 @@ Return exactly this structure:
       let fileInput: any;
 
       if (mimeType === 'application/pdf') {
-        // Gemini Interactions API uses "document" for PDFs
         fileInput = {
           type: 'document',
           data: fileBase64,
           mime_type: 'application/pdf',
         };
       } else {
-        // JPG / PNG
         fileInput = {
           type: 'image',
           data: fileBase64,
@@ -277,12 +310,12 @@ Return exactly this structure:
         );
       }
 
-      // Basic validation of each lecture
       for (const lecture of parsedSlots) {
         if (
           typeof lecture.dayOfWeek !== 'number' ||
           typeof lecture.startTime !== 'string' ||
           typeof lecture.endTime !== 'string' ||
+          typeof lecture.suggestedSubjectName !== 'string' ||
           typeof lecture.suggestedSubjectCode !== 'string' ||
           typeof lecture.lectureNumber !== 'number'
         ) {
