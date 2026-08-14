@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                        String           @id // Matches Supabase Auth UUID
+  name                      String?
+  email                     String           @unique
+  defaultRequiredAttendance Float            @default(75.0)
+  createdAt                 DateTime         @default(now())
+  subjects                  Subject[]
+  timetableSlots            TimetableSlot[]
+  attendance                Attendance[]
+  reminders                 Reminder[]
+}
+
+model Subject {
+  id                 String           @id @default(uuid())
+  userId             String
+  name               String
+  code               String
+  teacher            String?
+  room               String?
+  requiredAttendance Float?           // Overrides user default if set
+  color              String?
+  user               User             @relation(fields: [userId], references: [id])
+  timetableSlots     TimetableSlot[]
+  attendance         Attendance[]
+}
+
+model TimetableSlot {
+  id            String       @id @default(uuid())
+  userId        String
+  subjectId     String
+  dayOfWeek     Int          // 0 = Sunday, 1 = Monday, etc.
+  startTime     String       // "09:00"
+  endTime       String       // "10:00"
+  lectureNumber Int          // 1, 2, etc. (for multi-hour blocks)
+  room          String?
+  active        Boolean      @default(true)
+  user          User         @relation(fields: [userId], references: [id])
+  subject       Subject      @relation(fields: [subjectId], references: [id])
+  attendance    Attendance[]
+  reminders     Reminder[]
+}
+
+model Attendance {
+  id              String        @id @default(uuid())
+  userId          String
+  subjectId       String
+  timetableSlotId String?
+  date            DateTime      // The actual date of the lecture
+  status          String        // "PRESENT", "ABSENT", "CANCELLED"
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id])
+  subject         Subject       @relation(fields: [subjectId], references: [id])
+  timetableSlot   TimetableSlot? @relation(fields: [timetableSlotId], references: [id])
+  
+  @@unique([userId, timetableSlotId, date])
+}
+
+model Reminder {
+  id              String        @id @default(uuid())
+  userId          String
+  timetableSlotId String
+  minutesBefore   Int
+  enabled         Boolean       @default(true)
+  user            User          @relation(fields: [userId], references: [id])
+  timetableSlot   TimetableSlot @relation(fields: [timetableSlotId], references: [id])
+}
